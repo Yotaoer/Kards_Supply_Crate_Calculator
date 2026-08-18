@@ -215,7 +215,7 @@
                 <div class="src-info">
                     <div class="src-label">📦 普通包 <span class="src-hint">3点/包 · 100金币</span></div>
                 </div>
-                <input type="number" id="normalPacks" value="0" min="0" oninput="onPackInput()">
+                <input type="number" id="normalPacks" value="0" min="0" oninput="onPackInput('normal')">
                 <div class="src-xp" id="normalXP">0 点</div>
             </div>
 
@@ -225,7 +225,7 @@
                 <div class="src-info">
                     <div class="src-label">⭐ 军官包 <span class="src-hint">6点/包 · 330金币</span></div>
                 </div>
-                <input type="number" id="officerPacks" value="0" min="0" oninput="onPackInput()">
+                <input type="number" id="officerPacks" value="0" min="0" oninput="onPackInput('officer')">
                 <div class="src-xp" id="officerXP">0 点</div>
             </div>
 
@@ -320,11 +320,13 @@ const DATA = {
 
 let isAutoMode = true;
 let isAdjusting = false;
+let lastUserAction = null; // 'normal' | 'officer' | 'destroy' | null
 
 const locks = { normal: false, officer: false, destroy: false };
 
 function toggleLock(type) {
     locks[type] = !locks[type];
+    lastUserAction = null; // 锁定操作重置用户动作标记
     const btn = document.getElementById('lock' + type.charAt(0).toUpperCase() + type.slice(1) + 'Btn');
     if (locks[type]) {
         btn.textContent = '🔒';
@@ -382,16 +384,19 @@ function updateProgressLocks() {
 
 function onAutoCalcToggle() {
     isAutoMode = document.getElementById('autoCalc').checked;
+    lastUserAction = null;
     if (isAutoMode) { autoCalculatePacks(); }
 }
 
-function onPackInput() {
+function onPackInput(type) {
     if (isAdjusting) return;
+    lastUserAction = type;
     if (isAutoMode) { autoCalculatePacks(); } else { calculate(); }
 }
 
 function onDestroyInput() {
     if (isAdjusting) return;
+    lastUserAction = 'destroy';
     if (isAutoMode) { autoCalculatePacks(); } else { calculate(); }
 }
 
@@ -472,31 +477,30 @@ function autoCalculatePacks() {
     if (Math.abs(gap) < 0.01) {
         // 恰好达标，无需调整
     } else if (gap > 0) {
-        // 还不够，需要增加经验
-        fillGap(gap, normalVal, officerVal);
+        // 还不够，需要增加经验（跳过用户刚改的来源）
+        fillGap(gap, normalVal, officerVal, lastUserAction);
     } else {
-        // 超出了，需要降低经验（优先降成本高的）
-        trimExcess(-gap, normalVal, officerVal);
+        // 超出了，需要降低经验（跳过用户刚改的来源，优先降成本高的）
+        trimExcess(-gap, normalVal, officerVal, lastUserAction);
     }
 
     isAdjusting = false;
     calculate();
 }
 
-function fillGap(gap, normalVal, officerVal) {
-    // 优先加普通包，再军官包
+function fillGap(gap, normalVal, officerVal, skip) {
     let n = normalVal, o = officerVal;
     let remaining = gap;
 
-    // 先尝试用普通包填补
-    if (!locks.normal) {
+    // 优先用普通包填补（除非用户刚改了普通包）
+    if (!locks.normal && skip !== 'normal') {
         const need = Math.ceil(remaining / DATA.packXP.normal);
         n += need;
         remaining = gap - (n - normalVal) * DATA.packXP.normal;
     }
 
-    // 如果普通包锁了或不够，用军官包
-    if (remaining > 0.01 && !locks.officer) {
+    // 不够再用军官包（除非用户刚改了军官包）
+    if (remaining > 0.01 && !locks.officer && skip !== 'officer') {
         const need = Math.ceil(remaining / DATA.packXP.officer);
         o += need;
     }
@@ -505,20 +509,20 @@ function fillGap(gap, normalVal, officerVal) {
     if (!locks.officer) document.getElementById('officerPacks').value = o;
 }
 
-function trimExcess(excess, normalVal, officerVal) {
-    // 优先减军官包（贵），再减普通包（便宜）
+function trimExcess(excess, normalVal, officerVal, skip) {
+    // 优先减军官包（贵），再减普通包（便宜），跳过用户刚改的
     let n = normalVal, o = officerVal;
     let remaining = excess;
 
-    // 先减军官包
-    if (!locks.officer && o > 0) {
+    // 先减军官包（除非用户刚改了军官包）
+    if (!locks.officer && o > 0 && skip !== 'officer') {
         const canRemove = Math.min(o, Math.ceil(remaining / DATA.packXP.officer));
         o -= canRemove;
         remaining -= canRemove * DATA.packXP.officer;
     }
 
-    // 还不够就减普通包
-    if (remaining > 0.01 && !locks.normal && n > 0) {
+    // 还不够就减普通包（除非用户刚改了普通包）
+    if (remaining > 0.01 && !locks.normal && n > 0 && skip !== 'normal') {
         const canRemove = Math.min(n, Math.ceil(remaining / DATA.packXP.normal));
         n -= canRemove;
         remaining -= canRemove * DATA.packXP.normal;
