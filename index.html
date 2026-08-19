@@ -209,11 +209,23 @@
         </div>
         <div class="card-body">
 
+            <!-- 全卡牌开关 -->
+            <div class="switch-container">
+                <label class="switch">
+                    <input type="checkbox" id="fullCollection" onchange="onFullCollectionToggle()">
+                    <span class="slider"></span>
+                </label>
+                <div style="flex:1;">
+                    <strong>已集齐全卡牌</strong>
+                    <div class="hint">全部卡牌已获得，开包所有卡均为重复卡 · 普通 <span style="color:var(--primary);">13.688点/包</span> · 军官 <span style="color:var(--primary);">29.936点/包</span></div>
+                </div>
+            </div>
+
             <!-- 普通包 -->
             <div class="source-row">
                 <button class="lock-btn" id="lockNormalBtn" onclick="toggleLock('normal')" title="锁定/解锁普通包">🔓</button>
                 <div class="src-info">
-                    <div class="src-label">📦 普通包 <span class="src-hint">3点/包 · 100金币</span></div>
+                    <div class="src-label">📦 普通包 <span class="src-hint" id="normalLabel">3点/包 · 100金币</span></div>
                 </div>
                 <input type="number" id="normalPacks" value="0" min="0" oninput="onPackInput('normal')">
                 <div class="src-xp" id="normalXP">0 点</div>
@@ -223,7 +235,7 @@
             <div class="source-row">
                 <button class="lock-btn" id="lockOfficerBtn" onclick="toggleLock('officer')" title="锁定/解锁军官包">🔓</button>
                 <div class="src-info">
-                    <div class="src-label">⭐ 军官包 <span class="src-hint">6点/包 · 330金币</span></div>
+                    <div class="src-label">⭐ 军官包 <span class="src-hint" id="officerLabel">6点/包 · 330金币</span></div>
                 </div>
                 <input type="number" id="officerPacks" value="0" min="0" oninput="onPackInput('officer')">
                 <div class="src-xp" id="officerXP">0 点</div>
@@ -326,7 +338,14 @@ const DATA = {
 
 let isAutoMode = true;
 let isAdjusting = false;
-let lastUserAction = null; // 'normal' | 'officer' | 'destroy' | null
+let lastUserAction = null;
+let isFullCollection = false;
+
+const FULL_XP = { normal: 13.688, officer: 29.936 };
+
+function getEffectiveXP(type) {
+    return isFullCollection ? FULL_XP[type] : DATA.packXP[type];
+}
 
 const locks = { normal: false, officer: false, destroy: false };
 
@@ -394,6 +413,18 @@ function onAutoCalcToggle() {
     if (isAutoMode) { autoCalculatePacks(); }
 }
 
+function onFullCollectionToggle() {
+    isFullCollection = document.getElementById('fullCollection').checked;
+    updatePackLabels();
+    if (isAutoMode) { autoCalculatePacks(); } else { calculate(); }
+}
+
+function updatePackLabels() {
+    const n = getEffectiveXP('normal'), o = getEffectiveXP('officer');
+    document.getElementById('normalLabel').textContent = n.toFixed(isFullCollection ? 3 : 0) + '点/包 · 100金币';
+    document.getElementById('officerLabel').textContent = o.toFixed(isFullCollection ? 3 : 0) + '点/包 · 330金币';
+}
+
 function onPackInput(type) {
     if (isAdjusting) return;
     lastUserAction = type;
@@ -432,7 +463,7 @@ function calculate() {
     }
     let requiredXP = getRawRequiredXP(current, target);
 
-    const packXP = normalPacks * DATA.packXP.normal + officerPacks * DATA.packXP.officer;
+    const packXP = normalPacks * getEffectiveXP('normal') + officerPacks * getEffectiveXP('officer');
     const destroyXP = getDestroyXP();
     const totalGain = packXP + destroyXP;
     const isReachTarget = totalGain >= requiredXP;
@@ -459,8 +490,8 @@ function calculate() {
     document.getElementById('totalPacks').textContent = (normalPacks+officerPacks) + ' 包';
     document.getElementById('efficiency').textContent = cost > 0 ? (totalGain/cost).toFixed(4) : '0.0000';
 
-    document.getElementById('normalXP').textContent = (normalPacks*DATA.packXP.normal).toFixed(0) + ' 点';
-    document.getElementById('officerXP').textContent = (officerPacks*DATA.packXP.officer).toFixed(0) + ' 点';
+    document.getElementById('normalXP').textContent = (normalPacks*getEffectiveXP('normal')).toFixed(0) + ' 点';
+    document.getElementById('officerXP').textContent = (officerPacks*getEffectiveXP('officer')).toFixed(0) + ' 点';
     document.getElementById('destroyXP2').textContent = destroyXP.toFixed(1) + ' 点';
 }
 
@@ -475,7 +506,7 @@ function autoCalculatePacks() {
     const destroyXP = getDestroyXP();
 
     // 计算当前总进度
-    const currentTotal = normalVal * DATA.packXP.normal + officerVal * DATA.packXP.officer + destroyXP;
+    const currentTotal = normalVal * getEffectiveXP('normal') + officerVal * getEffectiveXP('officer') + destroyXP;
     const gap = requiredXP - currentTotal; // 正数=还不够，负数=超出了
 
     isAdjusting = true;
@@ -500,14 +531,14 @@ function fillGap(gap, normalVal, officerVal, skip) {
 
     // 优先用普通包填补（除非用户刚改了普通包）
     if (!locks.normal && skip !== 'normal') {
-        const need = Math.ceil(remaining / DATA.packXP.normal);
+        const need = Math.ceil(remaining / getEffectiveXP('normal'));
         n += need;
-        remaining = gap - (n - normalVal) * DATA.packXP.normal;
+        remaining = gap - (n - normalVal) * getEffectiveXP('normal');
     }
 
     // 不够再用军官包（除非用户刚改了军官包）
     if (remaining > 0.01 && !locks.officer && skip !== 'officer') {
-        const need = Math.ceil(remaining / DATA.packXP.officer);
+        const need = Math.ceil(remaining / getEffectiveXP('officer'));
         o += need;
     }
 
@@ -522,16 +553,16 @@ function trimExcess(excess, normalVal, officerVal, skip) {
 
     // 先减军官包（除非用户刚改了军官包）
     if (!locks.officer && o > 0 && skip !== 'officer') {
-        const canRemove = Math.min(o, Math.ceil(remaining / DATA.packXP.officer));
+        const canRemove = Math.min(o, Math.ceil(remaining / getEffectiveXP('officer')));
         o -= canRemove;
-        remaining -= canRemove * DATA.packXP.officer;
+        remaining -= canRemove * getEffectiveXP('officer');
     }
 
     // 还不够就减普通包（除非用户刚改了普通包）
     if (remaining > 0.01 && !locks.normal && n > 0 && skip !== 'normal') {
-        const canRemove = Math.min(n, Math.ceil(remaining / DATA.packXP.normal));
+        const canRemove = Math.min(n, Math.ceil(remaining / getEffectiveXP('normal')));
         n -= canRemove;
-        remaining -= canRemove * DATA.packXP.normal;
+        remaining -= canRemove * getEffectiveXP('normal');
     }
 
     if (!locks.normal) document.getElementById('normalPacks').value = Math.max(0, n);
@@ -544,7 +575,7 @@ function optimizeCost() {
     let xp = getRawRequiredXP(current, target);
     xp = Math.max(0, xp - getDestroyXP());
     isAdjusting = true;
-    if (!locks.normal) document.getElementById('normalPacks').value = Math.max(0, Math.ceil(xp / DATA.packXP.normal));
+    if (!locks.normal) document.getElementById('normalPacks').value = Math.max(0, Math.ceil(xp / getEffectiveXP('normal')));
     if (!locks.officer) document.getElementById('officerPacks').value = 0;
     isAdjusting = false;
     calculate();
@@ -557,7 +588,7 @@ function optimizeSpeed() {
     xp = Math.max(0, xp - getDestroyXP());
     isAdjusting = true;
     if (!locks.normal) document.getElementById('normalPacks').value = 0;
-    if (!locks.officer) document.getElementById('officerPacks').value = Math.max(0, Math.ceil(xp / DATA.packXP.officer));
+    if (!locks.officer) document.getElementById('officerPacks').value = Math.max(0, Math.ceil(xp / getEffectiveXP('officer')));
     isAdjusting = false;
     calculate();
 }
