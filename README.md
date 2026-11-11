@@ -1,20 +1,5 @@
 # Kards- 军需箱（骨灰盒）计算器  
 
-> 当前分支 `rewrite/kards-supply-planner` 是新版源码。`main` 和现有 GitHub Pages 仍保留旧站，新版尚未配置上线。
-
-## 旧版说明
-
-刚开始制作的时候是有输入卡片数量来计算获得重复卡牌概率的功能的  
-但是额呃呃呃  
-首先手动输入各类型卡牌数量太过麻烦  
-冰岛人的用户数据也找不到wwwww  
-所以功能写好之后又把它砍了hhh  
-毕竟那点概率对游戏本身其实影响不大  
-有什么好的建议可以加qq群861577417或者好友3577557518  
-已经通过Github Pages部署https://yotaoer.github.io/Kards_Supply_Crate_Calculator/
-
-## 重写版（未上线）
-
 新版为 Vite + TypeScript + 原生 DOM，提交在独立重写分支。推送此分支不修改 `main`、默认分支或 Pages 设置，也不代表新版已部署。
 
 ```sh
