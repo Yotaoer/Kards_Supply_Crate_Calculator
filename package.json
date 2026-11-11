@@ -1,0 +1,22 @@
+{
+  "name": "kards-supply-planner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test": "node --test tests/*.test.mjs",
+    "check:browser": "node scripts/check-browser.mjs"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "^5.2.8",
+    "@fontsource-variable/oswald": "^5.3.0",
+    "lucide": "^0.468.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.56.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.2"
+  }
+}

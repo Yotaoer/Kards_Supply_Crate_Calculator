@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.browser-check/
+/.taste-skill/
+/.impeccable/
+/legacy/
+/DESIGN.md
+/PRODUCT.md
+/docs/design.md
+/docs/surface-brief.md
+/docs/execution-v1.md
+/docs/additions-coins-links.md
+/public/assets/kards/gameplay.webp
+/public/assets/kards/cards-reference.png
