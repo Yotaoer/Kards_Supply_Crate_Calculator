@@ -1,13 +1,13 @@
 import '@fontsource-variable/geist';
 import '@fontsource-variable/oswald';
 import './style.css';
-import { createIcons, Tickets, Medal, Minus, Plus, RotateCcw, ArrowDownToLine, Copy, Github, ExternalLink } from 'lucide';
+import { createIcons, Tickets, Medal, Minus, Plus, RotateCcw, ArrowDownToLine, Copy, Github, ExternalLink, Download } from 'lucide';
 import { RULES } from './rules.ts';
 import { recommend, evaluate, fundingRequirement, statusText, InputError, type Result, type FundingRequirement } from './calculator.ts';
 import { initFooter } from './footer.ts';
 import { load, save, defaults, toInputs, manualPlan, changeLevel, progressMax, type State, type Store } from './state.ts';
 
-const icons = { Tickets, Medal, Minus, Plus, RotateCcw, ArrowDownToLine, Copy, Github, ExternalLink };
+const icons = { Tickets, Medal, Minus, Plus, RotateCcw, ArrowDownToLine, Copy, Github, ExternalLink, Download };
 const icon = (name: keyof typeof icons) => `<i data-lucide="${name.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()}" aria-hidden="true"></i>`;
 const fmt = (n: number) => n.toLocaleString('zh-CN', { maximumFractionDigits: 3 });
 const el = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -19,6 +19,7 @@ const restored = load(storage);
 let state: State = restored.state;
 let storageWarning = restored.warning;
 let recommendation: Result | null = null;
+const apkDownload = __NATIVE_OFFLINE__ ? '' : `<a id="apk-download" class="apk-download" href="https://github.com/Yotaoer/Kards_Supply_Crate_Calculator/releases/download/v1.0.1-offline-test/KARDS-Supply-Planner-1.0.1-offline-debug.apk" target="_blank" rel="noopener noreferrer" aria-label="下载 APK（测试版）">${icon('Download')}下载 APK（测试版）</a>`;
 
 function resourceField(key: keyof State, label: string, unit: string, max: number) {
   return `<label class="resource-field"><span>${label}</span><span class="unit-input">
@@ -45,10 +46,10 @@ el('app').innerHTML = `
   <a class="skip-link" href="#workspace">跳到规划区</a>
   <header class="brand-bar"><div class="brand-inner">
     <div class="brand"><img class="wordmark" src="./assets/kards/logo.svg" alt="KARDS官方卡牌标识" width="132" height="48" /><span class="brand-title">KARDS</span><span class="brand-name">军需调配台</span></div>
-    <div class="header-actions"><span id="save-state">本地方案</span><button id="reset" class="icon-button" title="清空本地方案" aria-label="清空本地方案">${icon('RotateCcw')}</button></div>
+    <div class="header-actions">${apkDownload}<span id="save-state">本地方案</span><button id="reset" class="icon-button" title="清空本地方案" aria-label="清空本地方案">${icon('RotateCcw')}</button></div>
   </div></header>
   <main class="workspace" id="workspace">
-    <div class="title-row"><h1>军需箱资源规划</h1><span class="simulation">仅模拟，不扣减资产</span></div>
+    <h1 class="page-title">军需箱资源规划</h1>
     <section class="tier-section" aria-labelledby="tier-heading">
       <div class="mission-object"><div><h2>本次调配目标</h2><strong id="mission-target">精英</strong><span>军需箱</span></div></div>
       <div class="upgrade-route">
@@ -115,7 +116,7 @@ el('app').innerHTML = `
             <div><dt>新购消耗</dt><dd id="cost">0 金币</dd></div>
             <div><dt id="balance-label">预算剩余</dt><dd id="balance">0 金币</dd></div>
           </dl>
-          <p class="result-note" id="result-note"></p>
+          <p class="result-note" id="result-note" hidden></p>
           <p class="field-error" id="global-error" role="alert" hidden></p>
         </section>
       </div>
@@ -132,11 +133,11 @@ el('app').innerHTML = `
         <div class="page-views"><span>本页访问次数</span><span id="page-view-status" role="status">统计加载中</span></div>
       </div>
       <span id="analytics-source" hidden aria-hidden="true"><span id="busuanzi_value_page_pv"></span></span>
-      <div class="footer-meta"><span>KARDS · 非官方玩家工具 · 官方素材仅供本地样板审查</span><details><summary>规则与口径</summary><p>档位需求20 / 30 / 50 / 100；基础开包3 / 6点；包价100 / 330金币。全卡13.688 / 29.936为旧表期望值，是否包含开包基础点数待核，不能视为保底。无游戏账号连接。</p></details></div>
+      <div class="footer-meta"><span>KARDS · 非官方玩家工具</span><details><summary>规则与口径</summary><p>档位需求20 / 30 / 50 / 100；基础开包3 / 6点；包价100 / 330金币。全卡13.688 / 29.936为旧表期望值，是否包含开包基础点数待核，不能视为保底。无游戏账号连接。</p></details></div>
     </footer>
   </main>
   <dialog id="reset-dialog" aria-labelledby="reset-heading"><form method="dialog">
-    <h2 id="reset-heading">清空本地方案？</h2><p>金币、卡包、目标和手动草稿将恢复默认值，不影响游戏资产。</p>
+    <h2 id="reset-heading">清空本地方案？</h2><p>金币、卡包、目标和手动草稿将恢复默认值。</p>
     <div class="dialog-actions"><button value="cancel" autofocus>取消</button><button value="confirm" class="primary-button">确认清空</button></div>
   </form></dialog>`;
 
@@ -231,11 +232,13 @@ function updateResult(result: Result, funding: FundingRequirement) {
   const summary = `${expected ? '期望' : '基础'}${gap ? '仍缺' : '超出'} ${fmt(answer)} 点 · 新购 ${fmt(result.cost)} 金币${result.withinBudget ? '' : ' · 超预算'}`;
   setText('mobile-summary', summary);
   setText('allocation-summary', summary);
-  setText('result-note', !result.withinBudget ? '手动配比超出金币预算，不可执行。已有包仍按免费计入。'
+  const resultNote = !result.withinBudget ? '手动配比超出金币预算，不可执行。已有包仍按免费计入。'
     : expected ? (state.mode === 'auto' && gap ? `预算内最大期望 ${fmt(result.gain)} 点，仍缺 ${fmt(result.gap)} 点。` : '') +
       '旧表期望口径待核，不代表实际开包保底达标。' : state.mode === 'auto' && gap
       ? `预算内最大可得 ${fmt(result.gain)} 点，仍缺 ${fmt(result.gap)} 点。`
-      : '本次为模拟方案，资产不会自动扣减。');
+      : '';
+  setText('result-note', resultNote);
+  el('result-note').hidden = !resultNote;
 }
 
 function clearResult(message: string) {
@@ -246,6 +249,7 @@ function clearResult(message: string) {
   setText('mobile-summary', '输入有误，未生成有效方案');
   setText('allocation-summary', '输入有误，未生成有效方案');
   setText('result-note', '');
+  el('result-note').hidden = true;
   el('current-fill').style.width = '0%';
   el('plan-fill').style.width = '0%';
   el('gap-fill').style.width = '0%';

@@ -17,6 +17,14 @@ Node 22.18+ 可直接运行 TypeScript 纯计算测试，无测试框架依赖�
 
 结算单另行计算最低达标新购金币和金币缺口，不用预算内方案花费冒充达标费用。本地预览禁用访问统计；生产环境只展示本页PV，失败或超时不影响计算。
 
+## Android离线测试版
+
+[下载1.0.1离线测试APK](https://github.com/Yotaoer/Kards_Supply_Crate_Calculator/releases/download/v1.0.1-offline-test/KARDS-Supply-Planner-1.0.1-offline-debug.apk) · [发布说明](https://github.com/Yotaoer/Kards_Supply_Crate_Calculator/releases/tag/v1.0.1-offline-test)
+
+Android7.0+/API24，需要可用的较新版系统WebView。页面、字体和运行素材内置，原生版不初始化访问统计；网页下载入口不会出现在APK内。无登录或后端，核心计算可离线使用，全卡结果仍是旧表期望而非保底。
+
+APK使用测试签名，后续覆盖更新须使用同一签名；尚未进行Android真机或模拟器运行验收。源码构建需要JDK21和Android SDK36，先执行 `npm run android:sync`，再在 `android/` 下运行 `gradlew :app:assembleDebug`。默认或本地测试密钥均不随源码提交，工具、产物和签名文件不得加入Git历史。
+
 ## GitHub Pages
 
 `.github/workflows/pages.yml` 在 `main` 推送或手动触发时使用 Node 24 执行 `npm ci`、`npm test`、`npm run build`，只上传并部署 `dist/`。Windows浏览器检查仍在本地运行，不放入Ubuntu构建任务。

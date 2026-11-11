@@ -1,0 +1,14 @@
+{
+  "appId": "com.yotaoer.kardssupply",
+  "appName": "KARDS军需调配台",
+  "webDir": "dist-android",
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "native",
+      "style": "DARK"
+    },
+    "CapacitorHttp": {
+      "enabled": false
+    }
+  }
+}

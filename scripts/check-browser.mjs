@@ -28,12 +28,18 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto(baseURL);
+  const download = page.getByRole('link', { name: '下载 APK（测试版）', exact: true });
+  assert.equal(await download.isVisible(), true);
+  assert.equal(await download.getAttribute('href'), 'https://github.com/Yotaoer/Kards_Supply_Crate_Calculator/releases/download/v1.0.1-offline-test/KARDS-Supply-Planner-1.0.1-offline-debug.apk');
+  assert.equal(await download.locator('svg').count(), 1);
+  assert.doesNotMatch(await page.locator('body').innerText(), /仅模拟|本次为模拟方案|资产不会自动扣减|官方素材仅供本地样板审查/);
   await page.locator('#currentLevel').selectOption('0');
   await page.locator('#targetLevel').selectOption('1');
   await page.locator('#coins').fill('700');
   assert.equal(await page.locator('#manualNormal').inputValue(), '7');
   await expectText(page, '#gain', /^21 点$/);
   await expectText(page, '#result-status', /按基础经验达到/);
+  assert.equal(await page.locator('#result-note').isVisible(), false);
   assert.equal(await page.locator('#gap-fill').evaluate(node => node.style.width), '0%');
   await page.locator('#coins').fill('600');
   await expectText(page, '#gain', /^18 点$/);
@@ -44,6 +50,7 @@ try {
   await expectText(page, '#cost', /^500 金币$/);
   await expectText(page, '#normal-used', /^2$/);
   record('auto target, existing packs free and new purchases charged');
+  record('web APK download anchor and cleaned copy; empty explanatory note hidden');
   record('lower target gap segment stops at target, not end of full scale');
 
   await page.getByRole('button', { name: '手动配比', exact: true }).click();
@@ -147,6 +154,13 @@ try {
     }));
     assert.equal(metrics.overflow, false, `horizontal overflow at ${width}`);
     assert.equal(metrics.badImages, 0);
+    assert.equal(await download.isVisible(), true);
+    const overlap = await page.evaluate(() => {
+      const a = document.getElementById('apk-download').getBoundingClientRect();
+      const b = document.getElementById('reset').getBoundingClientRect();
+      return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    });
+    assert.equal(overlap, false, `download/reset overlap at ${width}`);
     await page.screenshot({ path: `${out}/viewport-${width}.png`, fullPage: true });
   }
   await page.locator('#coins').focus();

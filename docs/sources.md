@@ -3,6 +3,7 @@
 - 业务基线：`https://github.com/Yotaoer/Kards_Supply_Crate_Calculator`，真实 Git 克隆，源提交 `6a866e08929fee7dc427a016f383455cd7dc0777`。规则证据见 `mechanics.md`。
 - Geist：`@fontsource-variable/geist@5.3.0`，来源 `https://fontsource.org/fonts/geist`；字体作者 The Geist Project Authors，项目 `https://github.com/vercel/geist-font`，SIL Open Font License 1.1。字体经依赖本地打包，无在线字体服务；完整许可原样复制到 `public/licenses/geist-OFL.txt`，随静态构建分发。
 - 工具图标：`lucide@0.468.0`，`https://lucide.dev/`；依赖中的完整许可原样复制到 `public/licenses/lucide-LICENSE.txt`，不宣称图标为 KARDS 官方资产。
+- Android封装：`@capacitor/core@8.6.0`、`@capacitor/android@8.6.0`，`https://capacitorjs.com/`；各自现成MIT许可保留在 `public/licenses/capacitor-core-MIT.txt`、`capacitor-android-MIT.txt`，随离线APK内置，不作为本项目统一授权。
 - Oswald：`@fontsource-variable/oswald`，`https://fontsource.org/fonts/oswald`，SIL Open Font License 1.1；完整依赖许可位于 `public/licenses/oswald-OFL.txt`。
 - 运行时KARDS素材来自官方站：`public/assets/kards/logo.svg` 原始地址 `https://www.kards.com/static/images/logo.svg`；`desk.jpg` 原始地址 `https://www.kards.com/static/images/bg.jpg`；`paper.png` 原始地址 `https://www.kards.com/static/images/paper2.png`。文件按官方资产本地化，仅用于当前美术样板，不宣称自行创作或官方授权背书。
 - 官方资源页 `https://www.kards.com/resources` 提供Press Kit及社区许可入口；社区许可链接 `https://support.kards.com/hc/en-us/articles/360027838532-KARDS-Community-License` 在核查时跳转帮助首页，完整条款尚未核实。源分支推送不等于素材已获得公开部署授权；素材权利归各自权利人。

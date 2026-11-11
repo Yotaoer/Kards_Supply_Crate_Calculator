@@ -12,3 +12,10 @@ dist/
 /docs/additions-coins-links.md
 /public/assets/kards/gameplay.webp
 /public/assets/kards/cards-reference.png
+/dist-android/
+/.android-local/
+/artifacts/android/
+/android/local.properties
+/android/key.properties
+*.keystore
+*.jks

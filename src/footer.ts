@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+
 let initialized = false;
 
 export function initFooter(): void {
@@ -26,6 +28,10 @@ export function initFooter(): void {
   });
 
   const status = document.getElementById('page-view-status')!;
+  if (__NATIVE_OFFLINE__ || Capacitor.isNativePlatform()) {
+    status.textContent = '离线版不统计';
+    return;
+  }
   const host = location.hostname;
   if (host === 'localhost' || host.endsWith('.localhost') || host === '127.0.0.1' ||
       host === '[::1]' || host === '::1') {
