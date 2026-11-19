@@ -28,7 +28,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   await page.goto(baseURL);
-  const download = page.getByRole('link', { name: '下载 APK（测试版）', exact: true });
+  const download = page.locator('#apk-download:visible, #apk-download-footer:visible');
   assert.equal(await download.isVisible(), true);
   assert.equal(await download.getAttribute('href'), 'https://github.com/Yotaoer/Kards_Supply_Crate_Calculator/releases/download/v1.0.1-offline-test/KARDS-Supply-Planner-1.0.1-offline-debug.apk');
   assert.equal(await download.locator('svg').count(), 1);
@@ -39,6 +39,10 @@ try {
   assert.equal(await page.locator('#manualNormal').inputValue(), '7');
   await expectText(page, '#gain', /^21 点$/);
   await expectText(page, '#result-status', /按基础经验达到/);
+  assert.equal(await page.locator('#mobile-summary').count(), 1);
+  assert.equal(await page.locator('#allocation-summary').count(), 0);
+  await expectText(page, '#mobile-summary-minimum', /^700 金币$/);
+  await expectText(page, '#mobile-summary-shortfall', /^0 金币$/);
   assert.equal(await page.locator('#result-note').isVisible(), false);
   assert.equal(await page.locator('#gap-fill').evaluate(node => node.style.width), '0%');
   await page.locator('#coins').fill('600');
@@ -147,6 +151,30 @@ try {
 
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 });
+    if (width === 390) {
+      assert.equal(await page.locator('#apk-download').isVisible(), false);
+      assert.equal(await page.locator('#apk-download-footer').isVisible(), true);
+      assert.equal(await page.locator('#mobile-summary').isVisible(), true);
+      await expectText(page, '#mobile-summary-progress', /仍缺|超出|无需新增/);
+      await expectText(page, '#mobile-summary-minimum', /金币/);
+      await expectText(page, '#mobile-summary-shortfall', /金币/);
+      const retainedCoins = await page.locator('#coins').inputValue();
+      const retainedTarget = await page.locator('#targetLevel').inputValue();
+      await page.locator('#plan-inputs > summary').click();
+      assert.equal(await page.locator('#plan-inputs').getAttribute('open'), null);
+      assert.equal(await page.locator('#targetLevel').isVisible(), false);
+      await page.locator('#plan-inputs > summary').click();
+      assert.equal(await page.locator('#plan-inputs').getAttribute('open'), '');
+      assert.equal(await page.locator('#coins').inputValue(), retainedCoins);
+      assert.equal(await page.locator('#targetLevel').inputValue(), retainedTarget);
+      await page.locator('#view-settlement').click();
+      assert.equal(await page.evaluate(() => document.activeElement?.id), 'result-heading');
+      const resultRect = await page.locator('#result-heading').boundingBox();
+      assert.ok(resultRect && resultRect.y >= 0 && resultRect.y < 1000);
+    } else {
+      assert.equal(await page.locator('#apk-download').isVisible(), true);
+      assert.equal(await page.locator('#apk-download-footer').isVisible(), false);
+    }
     const metrics = await page.evaluate(() => ({
       overflow: document.documentElement.scrollWidth > innerWidth,
       badImages: [...document.images].filter(img => !img.complete || !img.naturalWidth).length,
@@ -156,7 +184,8 @@ try {
     assert.equal(metrics.badImages, 0);
     assert.equal(await download.isVisible(), true);
     const overlap = await page.evaluate(() => {
-      const a = document.getElementById('apk-download').getBoundingClientRect();
+      const download = document.querySelector('#apk-download:where(:not([style*="display: none"])), #apk-download-footer');
+      const a = download?.getBoundingClientRect() ?? new DOMRect();
       const b = document.getElementById('reset').getBoundingClientRect();
       return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
     });

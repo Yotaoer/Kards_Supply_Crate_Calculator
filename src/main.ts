@@ -19,7 +19,7 @@ const restored = load(storage);
 let state: State = restored.state;
 let storageWarning = restored.warning;
 let recommendation: Result | null = null;
-const apkDownload = __NATIVE_OFFLINE__ ? '' : `<a id="apk-download" class="apk-download" href="https://github.com/Yotaoer/Kards_Supply_Crate_Calculator/releases/download/v1.0.1-offline-test/KARDS-Supply-Planner-1.0.1-offline-debug.apk" target="_blank" rel="noopener noreferrer" aria-label="下载 APK（测试版）">${icon('Download')}下载 APK（测试版）</a>`;
+const apkDownload = (id: string, extraClass: string) => __NATIVE_OFFLINE__ ? '' : `<a id="${id}" class="apk-download ${extraClass}" href="https://github.com/Yotaoer/Kards_Supply_Crate_Calculator/releases/download/v1.0.1-offline-test/KARDS-Supply-Planner-1.0.1-offline-debug.apk" target="_blank" rel="noopener noreferrer" aria-label="下载 APK（测试版）">${icon('Download')}下载 APK（测试版）</a>`;
 
 function resourceField(key: keyof State, label: string, unit: string, max: number) {
   return `<label class="resource-field"><span>${label}</span><span class="unit-input">
@@ -46,7 +46,7 @@ el('app').innerHTML = `
   <a class="skip-link" href="#workspace">跳到规划区</a>
   <header class="brand-bar"><div class="brand-inner">
     <div class="brand"><img class="wordmark" src="./assets/kards/logo.svg" alt="KARDS官方卡牌标识" width="132" height="48" /><span class="brand-title">KARDS</span><span class="brand-name">军需调配台</span></div>
-    <div class="header-actions">${apkDownload}<span id="save-state">本地方案</span><button id="reset" class="icon-button" title="清空本地方案" aria-label="清空本地方案">${icon('RotateCcw')}</button></div>
+    <div class="header-actions">${apkDownload('apk-download', 'apk-download-header')}<span id="save-state">本地方案</span><button id="reset" class="icon-button" title="清空本地方案" aria-label="清空本地方案">${icon('RotateCcw')}</button></div>
   </div></header>
   <main class="workspace" id="workspace">
     <h1 class="page-title">军需箱资源规划</h1>
@@ -63,10 +63,19 @@ el('app').innerHTML = `
       <div class="scale-caption"><div class="legend"><span><i class="legend-current"></i>当前</span><span><i class="legend-plan"></i>本次计划</span><span><i class="legend-gap"></i>待补进度</span></div><span id="scale-result">还需 150 点</span></div>
       </div>
     </section>
-    <div id="mobile-summary" class="mobile-summary" role="status"></div>
+    <div id="mobile-summary" class="mobile-summary" role="status">
+      <div class="mobile-summary-values">
+        <span><strong id="mobile-summary-progress">仍缺进度 -</strong></span>
+        <span>最低新购 <strong id="mobile-summary-minimum">-</strong></span>
+        <span>还缺金币 <strong id="mobile-summary-shortfall">-</strong></span>
+      </div>
+      <a id="view-settlement" href="#result-heading">查看结算</a>
+    </div>
     <p id="storage-warning" class="storage-warning" role="status" hidden></p>
     <div class="work-grid">
-      <div class="input-column">
+      <details id="plan-inputs" class="plan-inputs" open>
+        <summary>计划输入</summary>
+        <div class="input-column">
         <section class="input-section" aria-labelledby="target-heading">
           <div class="section-title"><h2 id="target-heading">目标设定</h2><span id="required-label"></span></div>
           <div class="two-fields">
@@ -95,18 +104,18 @@ el('app').innerHTML = `
             </div><p class="context-note">仅计你明确填写的本次数量，不自动建议销毁。</p>
           </details>
         </section>
-      </div>
+        </div>
+      </details>
       <div class="plan-column">
         <section class="allocation-section" aria-labelledby="allocation-heading">
           <div class="section-title"><h2 id="allocation-heading">本次开包</h2><div class="segmented" role="group" aria-label="配比模式"><button data-mode="auto" type="button">自动推荐</button><button data-mode="manual" type="button">手动配比</button></div></div>
           <div class="strategy-row"><label for="strategy">推荐优先</label><select id="strategy" data-field="strategy"><option value="coins">省金币</option><option value="packs">少开包</option></select><button id="apply" class="text-button" type="button">${icon('ArrowDownToLine')}采用推荐</button></div>
-          <div id="allocation-summary" class="mobile-summary" role="status"></div>
           ${packRow('normal', '普通包', RULES.costs.normal)}
           ${packRow('officer', '军官包', RULES.costs.officer)}
           <div class="allocation-total"><span>本次总包数</span><strong id="total-packs">0 <small>包</small></strong></div>
         </section>
         <section class="result-section" aria-labelledby="result-heading">
-          <div class="result-heading"><h2 id="result-heading">结算单</h2><span id="result-basis">基础经验</span></div>
+          <div class="result-heading"><h2 id="result-heading" tabindex="-1">结算单</h2><span id="result-basis">基础经验</span></div>
           <div class="answer-row"><div><span id="answer-label">仍缺进度</span><div class="answer-value"><strong id="answer">150</strong><span>点</span></div></div><p id="result-status" role="status"></p></div>
           <dl class="result-ledger">
             <div class="funding-row"><dt id="minimum-cost-label">达标最低新购</dt><dd id="minimum-cost">-</dd></div>
@@ -124,6 +133,7 @@ el('app').innerHTML = `
     <footer>
       <div class="friend-row">
         <h2>友情链接</h2>
+        ${apkDownload('apk-download-footer', 'apk-download-footer')}
         <a id="project-link" href="https://github.com/Yotaoer/Kards_Supply_Crate_Calculator" target="_blank" rel="noopener noreferrer">${icon('Github')}本项目源码</a>
         <a id="homepage-link" href="https://yotaoer.github.io/my-homepage/" target="_blank" rel="noopener noreferrer">${icon('ExternalLink')}怪东西修理铺</a>
         <span class="friend-tool"><a id="glyph-link" href="https://yotaoer.github.io/kards-glyph-workbench/" target="_blank" rel="noopener noreferrer">KARDS剪字工作台</a><a id="glyph-source-link" class="footer-icon" href="https://github.com/Yotaoer/kards-glyph-workbench" target="_blank" rel="noopener noreferrer" title="KARDS剪字工作台GitHub源码" aria-label="KARDS剪字工作台GitHub源码">${icon('Github')}</a></span>
@@ -229,9 +239,9 @@ function updateResult(result: Result, funding: FundingRequirement) {
   el('gap-fill').style.width = `${result.gap / 2}%`;
   el('target-marker').style.left = `${result.target / 2}%`;
   el('tier-scale').setAttribute('aria-label', `总刻度200点，当前${fmt(result.current)}点，本次${expected ? '期望' : '计划'}${fmt(result.gain)}点，目标${fmt(result.target)}点，仍缺${fmt(result.gap)}点`);
-  const summary = `${expected ? '期望' : '基础'}${gap ? '仍缺' : '超出'} ${fmt(answer)} 点 · 新购 ${fmt(result.cost)} 金币${result.withinBudget ? '' : ' · 超预算'}`;
-  setText('mobile-summary', summary);
-  setText('allocation-summary', summary);
+  setText('mobile-summary-progress', `${gap ? '仍缺' : result.required === 0 ? '无需新增' : '超出'} ${fmt(answer)} 点`);
+  setText('mobile-summary-minimum', `${fmt(funding.minimumCost)} 金币`);
+  setText('mobile-summary-shortfall', `${fmt(funding.shortfall)} 金币`);
   const resultNote = !result.withinBudget ? '手动配比超出金币预算，不可执行。已有包仍按免费计入。'
     : expected ? (state.mode === 'auto' && gap ? `预算内最大期望 ${fmt(result.gain)} 点，仍缺 ${fmt(result.gap)} 点。` : '') +
       '旧表期望口径待核，不代表实际开包保底达标。' : state.mode === 'auto' && gap
@@ -246,8 +256,9 @@ function clearResult(message: string) {
     'scale-result', 'destroy-summary', 'normal-used', 'normal-buy', 'normal-xp', 'officer-used', 'officer-buy', 'officer-xp']) setText(id, '-');
   setText('result-status', '输入有误，未生成有效方案');
   el('result-status').dataset.kind = 'warning';
-  setText('mobile-summary', '输入有误，未生成有效方案');
-  setText('allocation-summary', '输入有误，未生成有效方案');
+  setText('mobile-summary-progress', '输入有误，未生成有效方案');
+  setText('mobile-summary-minimum', '-');
+  setText('mobile-summary-shortfall', '-');
   setText('result-note', '');
   el('result-note').hidden = true;
   el('current-fill').style.width = '0%';
@@ -347,6 +358,9 @@ el('reset-dialog').addEventListener('close', () => {
     storageWarning = save(storage, state);
     render();
   }
+});
+el('view-settlement').addEventListener('click', () => {
+  requestAnimationFrame(() => el('result-heading').focus({ preventScroll: true }));
 });
 
 createIcons({ icons, attrs: { 'stroke-width': 1.6 } });
