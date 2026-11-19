@@ -90,11 +90,14 @@ small { font-size: 12px; }
 #scale-result { color: #e2d7b0; }
 /* 1232px content = 312px inputs + 592px allocation + 280px result + two 24px gaps. */
 .work-grid { display: grid; grid-template-columns: 312px minmax(0, 1fr) 280px; gap: 24px; margin-top: 24px; align-items: start; }
-.plan-inputs { display: contents; }
-.plan-inputs > summary { display: none; }
 .input-column { display: grid; gap: 20px; }
 .plan-column { display: contents; }
 .input-section { min-width: 0; padding: 18px; background: #333a2d; border-top: 3px solid #7f876b; }
+.assets-section { margin-top: 0; }
+.assets-section > summary { list-style: none; cursor: default; }
+.assets-section > summary::-webkit-details-marker { display: none; }
+.assets-section > summary::marker { content: ""; }
+.assets-section > summary span { float: none; }
 .two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 label { display: block; font-size: 13px; }
 label > select, .resource-field > .unit-input { margin-top: 6px; }
@@ -109,7 +112,7 @@ label > select, .resource-field > .unit-input { margin-top: 6px; }
 .scenario-label { margin-top: 10px; }
 .context-note { color: #c0c5b0; font-size: 12px; line-height: 1.6; margin-top: 8px; }
 .resource-field { min-width: 0; }
-.assets-section > .resource-field { margin-bottom: 12px; }
+.asset-fields > .resource-field { margin-bottom: 12px; }
 #coins { color: #ead49b; font-family: "Oswald Variable", sans-serif; font-size: 20px; }
 details { margin-top: 16px; }
 summary { min-height: 28px; color: #c7ccba; font-size: 12px; }
@@ -236,17 +239,16 @@ dialog p { color: #d1d5c4; }
   .mobile-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; padding: 12px 0; color: #e1d3a8; border-bottom: 1px solid #777c61; }
   .mobile-summary-values { display: flex; flex-wrap: wrap; gap: 3px 12px; min-width: 0; }
   .mobile-summary-values > span { white-space: nowrap; }
-  .mobile-summary-values strong { color: #f0e3b9; font-weight: 600; }
+  .mobile-summary-values > span:not(:first-child) { color: #c7cbb9; }
+  .mobile-summary-values strong { color: #e8d9aa; font-weight: 600; }
   #view-settlement { flex: none; color: #e0dcc9; font-size: 12px; text-underline-offset: 3px; white-space: nowrap; }
   .work-grid { display: flex; flex-direction: column; gap: 16px; margin-top: 14px; }
-  .plan-inputs { display: block; order: 1; margin: 0; }
-  .plan-inputs > summary { display: flex; align-items: center; justify-content: space-between; min-height: 44px; padding: 0 14px; border-top: 2px solid #7f876b; background: #333a2d; color: #e6d8ad; font-size: 15px; font-weight: 600; list-style-position: inside; }
-  .plan-inputs > summary::after { content: "展开"; color: #bfc6ad; font-size: 12px; font-weight: 400; }
-  .plan-inputs[open] > summary::after { content: "收起"; }
-  .plan-inputs .input-column { display: grid; gap: 12px; margin-top: 10px; height: auto; }
+  .input-column { display: grid; gap: 12px; grid-column: auto; grid-row: auto; height: auto; }
   .input-section, .allocation-section, .result-section { width: 100%; padding: 16px; }
-  .input-section { order: 1; }
   .assets-section { order: 2; }
+  .assets-section > summary { cursor: pointer; }
+  .assets-section > summary::after { content: "展开"; color: #bfc6ad; font-size: 12px; font-weight: 400; }
+  .assets-section[open] > summary::after { content: "收起"; }
   .allocation-section { order: 3; }
   .result-section { order: 4; }
   .section-title { flex-wrap: wrap; gap: 8px; }

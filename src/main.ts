@@ -73,10 +73,8 @@ el('app').innerHTML = `
     </div>
     <p id="storage-warning" class="storage-warning" role="status" hidden></p>
     <div class="work-grid">
-      <details id="plan-inputs" class="plan-inputs" open>
-        <summary>计划输入</summary>
-        <div class="input-column">
-        <section class="input-section" aria-labelledby="target-heading">
+      <div class="input-column">
+        <section class="input-section target-section" aria-labelledby="target-heading">
           <div class="section-title"><h2 id="target-heading">目标设定</h2><span id="required-label"></span></div>
           <div class="two-fields">
             <label>当前档位<select id="currentLevel" data-field="currentLevel"></select></label>
@@ -88,8 +86,9 @@ el('app').innerHTML = `
           <label class="scenario-label">经验口径<select id="scenario" data-field="scenario"><option value="base">基础经验 · 只计开包</option><option value="full">全卡 · 旧表期望</option></select></label>
           <p id="scenario-note" class="context-note"></p>
         </section>
-        <section class="input-section assets-section" aria-labelledby="assets-heading">
-          <div class="section-title"><h2 id="assets-heading">资产清单</h2><span>已有包不重复计费</span></div>
+        <details id="assets-details" class="input-section assets-section" aria-labelledby="assets-heading">
+          <summary class="section-title assets-summary"><h2 id="assets-heading">资产清单</h2><span>已有包不重复计费</span></summary>
+          <div class="asset-fields">
           ${resourceField('coins', '金币预算', '金币', RULES.limits.coins)}
           <div class="two-fields">
             ${resourceField('ownedNormal', '已有普通包', '包', RULES.limits.count)}
@@ -103,9 +102,9 @@ el('app').innerHTML = `
               ${resourceField('destroyIron', '铁卡 · 0.8点', '张', RULES.limits.count)}
             </div><p class="context-note">仅计你明确填写的本次数量，不自动建议销毁。</p>
           </details>
-        </section>
-        </div>
-      </details>
+          </div>
+        </details>
+      </div>
       <div class="plan-column">
         <section class="allocation-section" aria-labelledby="allocation-heading">
           <div class="section-title"><h2 id="allocation-heading">本次开包</h2><div class="segmented" role="group" aria-label="配比模式"><button data-mode="auto" type="button">自动推荐</button><button data-mode="manual" type="button">手动配比</button></div></div>
@@ -154,6 +153,14 @@ el('app').innerHTML = `
 for (const id of ['currentLevel', 'targetLevel']) {
   el<HTMLSelectElement>(id).innerHTML = RULES.levels.map((label, value) => `<option value="${value}">${label}</option>`).join('');
 }
+
+const assetsDetails = el<HTMLDetailsElement>('assets-details');
+const mobileLayout = window.matchMedia('(max-width: 700px)');
+function syncAssetDisclosure() {
+  assetsDetails.open = !mobileLayout.matches;
+}
+syncAssetDisclosure();
+mobileLayout.addEventListener('change', syncAssetDisclosure);
 
 function setText(id: string, value: string) { el(id).textContent = value; }
 function syncInputs() {

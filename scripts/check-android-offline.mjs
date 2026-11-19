@@ -40,6 +40,8 @@ try {
   assert.equal(await page.evaluate(() => navigator.onLine), false);
   assert.equal(await page.locator('#page-view-status').innerText(), '离线版不统计');
   assert.equal(await page.locator('#page-view-script').count(), 0);
+  await page.locator('#assets-details > summary').click();
+  assert.equal(await page.locator('#assets-details').getAttribute('open'), '');
   await page.locator('#currentLevel').selectOption('0');
   await page.locator('#targetLevel').selectOption('1');
   await page.locator('#coins').fill('699');
